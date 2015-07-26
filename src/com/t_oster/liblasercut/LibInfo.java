@@ -47,7 +47,7 @@ public class LibInfo
       ExportSVG.class,
       GenericGcodeDriver.class,
       SmoothieBoard.class,
-      GrblBoard.class
+      GrblLaser.class
     };
   }
 }
