@@ -42,7 +42,7 @@ public class GrblLaser extends LaserCutter {
   private static final String SETTING_PRE_JOB_GCODE = "Pre-Job GCode (comma separated)";
   private static final String SETTING_POST_JOB_GCODE = "Post-Job GCode (comma separated)";
   private static final String SETTING_IDENTIFICATION_LINE = "Banner / Identification starts with";
-  private static final String SETTING_INIT_DELAY = "Seconds to wait for board reset";
+  private static final String SETTING_INIT_DELAY = "Sec to wait for board reset. 0 for soft reset.";
   private static final String LINEEND = "\n";
   private static final String SETTING_HOMING = "Do homing ($H) on init (y/n)";  
   private static final String SETTING_COMSPEED = "COM Speed";  
@@ -339,7 +339,7 @@ public class GrblLaser extends LaserCutter {
         // Set serial port params
         SerialPort portopts = (SerialPort) port;
         portopts.setFlowControlMode(SerialPort.FLOWCONTROL_NONE);
-        portopts.setDTR(true); // needed for Arduino Leonardo and Micro
+        portopts.setDTR(true); // needed for Arduino Leonardo and Micro.
         portopts.setRTS(true); // needed for Arduino Leonardo and Micro
         portopts.setSerialPortParams(Integer.parseInt(comspeed), SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
         // open in & out
@@ -348,15 +348,22 @@ public class GrblLaser extends LaserCutter {
         
         if (identificationLine != null && identificationLine.length() > 0)
         {
-          // Wait 5 seconds since GRBL is long to wake up..
-          for (int openingDelay=0;openingDelay<Integer.valueOf(initDelay); openingDelay++) {
-            pl.taskChanged(this, String.format("Waiting %ds", Integer.valueOf(initDelay)-openingDelay));
-            try {
-                  Thread.sleep(1000);                 //1000 milliseconds is one second.
-              } catch(InterruptedException ex) {
-                  Thread.currentThread().interrupt();
-              }
+          // if initDelay set wait for it, this is and arduino who takes times to reset
+          if (Integer.valueOf(initDelay)>0) {
+            for (int openingDelay=0;openingDelay<Integer.valueOf(initDelay); openingDelay++) {
+              pl.taskChanged(this, String.format("Waiting %ds", Integer.valueOf(initDelay)-openingDelay));
+              try {
+                    Thread.sleep(1000);                 //1000 milliseconds is one second.
+                } catch(InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                }
+            }
           }
+          // Else, this is not an arduino.. Soft reset it.
+          else {
+            System.out.println("Soft reset on "+i.getName());
+            out.printf(Locale.US,"\u0018");
+            }
           pl.taskChanged(this, "opening '"+i.getName()+"'");
           int tryc;
           // try 3 times, since 1st line can be garbage after port opening
