@@ -227,12 +227,6 @@ public class GrblLaser extends LaserCutter {
   
   protected void setFocus(PrintStream out, double focus, double resolution) throws IOException {
     String append = "";
-    if (!laserPowerSuspended) 
-    {
-      sendLine ("M5");
-      laserPowerSuspended = true;
-      append += " S0";
-    } 
     if (currentFocus != focus)
     {
       sendLine("G0 Z%f"+append, Util.px2mm(focus, resolution));
@@ -264,7 +258,7 @@ public class GrblLaser extends LaserCutter {
       // reenable laser
       sendLine("M3");
       // and send current feed rate
-      append += String.format(Locale.US, " F%d", (int) currentSpeed);
+      append += String.format(Locale.US, " F%d", (int) (max_speed*currentSpeed/100.0));
       }
     if ((nextPower != currentPower) || (laserPowerSuspended))
     {
