@@ -253,6 +253,9 @@ public class GrblLaser extends LaserCutter {
     {
       append += String.format(Locale.US, " F%d", (int) (max_speed*nextSpeed/100.0));
       currentSpeed = nextSpeed;
+      if (laserPowerSuspended) {
+              sendLine("M3");
+      }
     }
     else if (laserPowerSuspended)  {
       // reenable laser
