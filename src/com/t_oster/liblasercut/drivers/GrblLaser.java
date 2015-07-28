@@ -229,6 +229,7 @@ public class GrblLaser extends LaserCutter {
     String append = "";
     if (!laserPowerSuspended) 
     {
+      sendLine ("M5");
       laserPowerSuspended = true;
       append += " S0";
     } 
@@ -246,7 +247,7 @@ public class GrblLaser extends LaserCutter {
       laserPowerSuspended = true;
       sendLine ("M5");
       append += " S0";
-      append += String.format(Locale.US, " F%d", (int) max_speed);
+      append += String.format(Locale.US, " F%d", (int) max_feed);
 
     } 
     sendLine("G0 X%f Y%f"+append, Util.px2mm(x, resolution), Util.px2mm(y, resolution));
@@ -254,7 +255,12 @@ public class GrblLaser extends LaserCutter {
 
   protected void line(PrintStream out, int x, int y, double resolution) throws IOException {
     String append = "";
-    if (laserPowerSuspended) {
+    if (nextSpeed != currentSpeed)
+    {
+      append += String.format(Locale.US, " F%d", (int) (max_speed*nextSpeed/100.0));
+      currentSpeed = nextSpeed;
+    }
+    else if (laserPowerSuspended)  {
       // reenable laser
       sendLine("M3");
       // and send current feed rate
@@ -266,11 +272,7 @@ public class GrblLaser extends LaserCutter {
       append += String.format(Locale.US, " S%f", nextPower);
       currentPower = nextPower;
     }
-    if (nextSpeed != currentSpeed)
-    {
-      append += String.format(Locale.US, " F%d", (int) (max_speed*nextSpeed/100.0));
-      currentSpeed = nextSpeed;
-    }
+
     sendLine("G1 X%f Y%f"+append, Util.px2mm(x, resolution), Util.px2mm(y, resolution));
   }
 
